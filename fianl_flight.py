@@ -118,3 +118,15 @@ x_in=np.array(x_in).reshape(1,-1)
 x_scaled=scaler.transform(x_in)
 y_x=np.dot(fin_w,x_scaled[0])+fin_b
 print(f"prediction :{y_x:.2f}")
+
+
+from sklearn.preprocessing import StandardScaler
+import pickle
+
+# Suppose `x_array` is your model input feature array
+scaler = StandardScaler()
+x_scaled = scaler.fit_transform(x_array)  # ✅ fit before saving
+
+# Save the trained scaler
+with open("scaler.pkl", "wb") as f:
+    pickle.dump(scaler, f)
