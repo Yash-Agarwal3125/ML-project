@@ -1,2 +1,4 @@
-flask
-nump
+Flask
+numpy
+pandas
+scikit-learn
