@@ -1,7 +1,6 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 import numpy as np
 import pickle
-import pandas as pd
 
 app = Flask(__name__)
 
@@ -13,34 +12,35 @@ fin_b = model['bias']
 # Load scaler
 scaler = pickle.load(open("scaler.pkl", "rb"))
 
-@app.route('/')     #basic code to render the index.html file from templates folder
+@app.route('/')
 def home():
     return render_template('index.html')
 
-@app.route('/predict', methods=['POST'])  # predict using the model.pkl that we got from final_flight.py
+@app.route('/predict', methods=['POST'])
 def predict():
     try:
-        # Get form data
-        source_city = int(request.form['source_city'])
-        destination_city = int(request.form['destination_city'])
-        flight_class = int(request.form['class'])
-        duration = float(request.form['duration'])
-        days_left = int(request.form['days_left'])
-        departure_time = int(request.form['departure_time'])
+        # Get JSON data from fetch() request
+        data = request.get_json()
 
-        # Input array in correct order
+        # Extract and convert input fields
+        source_city = int(data['source_city'])
+        destination_city = int(data['destination_city'])
+        flight_class = int(data['class'])
+        duration = float(data['duration'])
+        days_left = int(data['days_left'])
+        departure_time = int(data['departure_time'])
+
+        # Prepare and scale input
         x_input = np.array([source_city, destination_city, flight_class, duration, days_left, departure_time]).reshape(1, -1)
-
-        # Scale it
         x_scaled = scaler.transform(x_input)
 
-        # Predict
+        # Predict using weights and bias
         predicted_price = np.dot(fin_w, x_scaled[0]) + fin_b
 
-        return render_template('index.html', prediction_text=f"Predicted Flight Price: ₹{predicted_price:.2f}")
+        return jsonify({'predicted_price': round(predicted_price, 2)})
     
     except Exception as e:
-        return render_template('index.html', prediction_text=f"Error: {e}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(debug=True)  #if any error it will sow on webpage 
+    app.run(debug=True)
